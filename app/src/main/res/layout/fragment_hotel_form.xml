@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_medium">
+
+        <TextView
+            android:id="@+id/formTitle"
+            style="@style/TitleText"
+            android:text="@string/add_hotel"
+            android:layout_marginBottom="@dimen/spacing_large" />
+
+        <!-- Hotel Name -->
+        <TextView
+            style="@style/LabelText"
+            android:text="@string/hotel_name" />
+
+        <EditText
+            android:id="@+id/hotelNameInput"
+            style="@style/InputField"
+            android:hint="@string/hotel_name"
+            android:inputType="text" />
+
+        <!-- Location -->
+        <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/hotel_location" />
+
+        <EditText
+            android:id="@+id/hotelLocationInput"
+            style="@style/InputField"
+            android:hint="@string/hotel_location"
+            android:inputType="text" />
+
+        <!-- Rating Spinner -->
+        <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/hotel_rating" />
+
+        <Spinner
+            android:id="@+id/ratingSpinner"
+            style="@style/InputField"
+            android:spinnerMode="dropdown" />
+
+        <!-- Price -->
+        <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/hotel_price" />
+
+        <EditText
+            android:id="@+id/hotelPriceInput"
+            style="@style/InputField"
+            android:hint="@string/hotel_price"
+            android:inputType="numberDecimal" />
+
+        <!-- Check-in Date -->
+        <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/check_in_date" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/input_height"
+            android:background="@drawable/input_background"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/spacing_medium"
+            android:paddingEnd="@dimen/spacing_medium">
+
+            <TextView
+                android:id="@+id/checkInDateDisplay"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/select_date"
+                android:textSize="@dimen/text_size_normal" />
+
+            <ImageView
+                android:id="@+id/checkInDateButton"
+                android:layout_width="@dimen/icon_size_small"
+                android:layout_height="@dimen/icon_size_small"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:tint="@color/booking_light_blue" />
+
+        </LinearLayout>
+
+        <!-- Available Checkbox -->
+        <CheckBox
+            android:id="@+id/availableCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/hotel_available"
+            android:textSize="@dimen/text_size_normal"
+            android:checked="true" />
+
+        <!-- Room Type Radio Buttons -->
+        <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/room_type" />
+
+        <RadioGroup
+            android:id="@+id/roomTypeRadioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/radioSingle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/single_room"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radioDouble"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/double_room" />
+
+            <RadioButton
+                android:id="@+id/radioSuite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/suite_room" />
+
+        </RadioGroup>
+
+        <!-- Hotel Image (for Image View requirement) -->
+        <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="@dimen/spacing_medium"
+            android:text="@string/hotel_image" />
+
+        <ImageView
+            android:id="@+id/hotelImageView"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_launcher"
+            android:background="@drawable/input_background" />
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_large"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/button_height"
+                android:layout_weight="1"
+                android:layout_marginEnd="@dimen/spacing_small"
+                android:background="@drawable/button_primary"
+                android:text="@string/save"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/cancelButton"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/button_height"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/spacing_small"
+                android:background="@drawable/input_background"
+                android:text="@string/cancel"
+                android:textColor="@color/booking_text_dark" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

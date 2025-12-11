@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hotel Booking</string>
+
+    <!-- MainActivity -->
+    <string name="hotels_tonight">Hotels for tonight nearby</string>
+    <string name="search_hotels">Search Hotels</string>
+    <string name="around_location">Around current location</string>
+    <string name="check_in_date">Check-in Date</string>
+    <string name="number_of_nights">Number of Nights</string>
+    <string name="check_out_date">Check-out Date: %s</string>
+    <string name="search">Search</string>
+    <string name="hotels_count">%d hotels</string>
+
+    <!-- Menu -->
+    <string name="menu_list">View List</string>
+    <string name="menu_database">Database</string>
+    <string name="menu_settings">Settings</string>
+
+    <!-- SimpleListActivity -->
+    <string name="list_title">Hotel List</string>
+
+    <!-- Activity3 -->
+    <string name="database_title">Hotel Database</string>
+    <string name="add_hotel">Add Hotel</string>
+    <string name="edit_hotel">Edit Hotel</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+
+    <!-- Form fields -->
+    <string name="hotel_name">Hotel Name</string>
+    <string name="hotel_location">Location</string>
+    <string name="hotel_rating">Rating</string>
+    <string name="hotel_price">Price per Night</string>
+    <string name="hotel_available">Available</string>
+    <string name="hotel_image">Hotel Image</string>
+    <string name="select_date">Select Date</string>
+
+    <!-- Room type strings for form -->
+    <string name="room_type">Room Type</string>
+    <string name="single_room">Single Room</string>
+    <string name="double_room">Double Room</string>
+    <string name="suite_room">Suite</string>
+
+    <!-- Messages -->
+    <string name="save_success">Hotel saved successfully</string>
+    <string name="delete_success">Hotel deleted successfully</string>
+    <string name="error_empty_fields">Please fill all required fields</string>
+
+    <!-- City Card strings -->
+    <string name="city_view_description">City view of Singapore</string>
+    <string name="city_name">Singapore</string>
+    <string name="navigate_description">Navigate</string>
+    <string name="app_name_booking">Booking.com</string> <!-- Toolbar title -->
+</resources>

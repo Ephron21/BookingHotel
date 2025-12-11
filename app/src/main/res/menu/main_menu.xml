@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Changed showAsAction to "never" to hide it from the toolbar -->
+    <item
+        android:id="@+id/menu_list"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="@string/menu_list"
+        app:showAsAction="never" />
+
+    <!-- Changed showAsAction to "never" to hide it from the toolbar -->
+    <item
+        android:id="@+id/menu_database"
+        android:icon="@android:drawable/ic_menu_save"
+        android:title="@string/menu_database"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_settings"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/menu_settings"
+        app:showAsAction="never" />
+
+</menu>

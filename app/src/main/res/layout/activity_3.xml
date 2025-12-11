@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/booking_blue"
+        app:navigationIcon="@android:drawable/ic_menu_revert"
+        app:title="@string/database_title"
+        app:titleTextColor="@color/white" />
+
+    <!-- Fragment Container -->
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" 
+        android:visibility="gone"/>
+
+    <!-- RecyclerView for list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="@dimen/spacing_small" />
+
+    <!-- Add Button -->
+    <Button
+        android:id="@+id/addButton"
+        style="@style/PrimaryButton"
+        android:layout_margin="@dimen/spacing_medium"
+        android:text="@string/add_hotel" />
+
+</LinearLayout>
