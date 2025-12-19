@@ -1,9 +1,12 @@
 package com.example.hotelbooking.adapter;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,6 +25,7 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.HotelViewHol
     public interface OnHotelClickListener {
         void onEditClick(Hotel hotel);
         void onDeleteClick(Hotel hotel);
+        void onItemClick(Hotel hotel);
     }
 
     public HotelAdapter(List<Hotel> hotelList, OnHotelClickListener listener) {
@@ -54,6 +58,7 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.HotelViewHol
     }
 
     class HotelViewHolder extends RecyclerView.ViewHolder {
+        private ImageView hotelImage;
         private TextView hotelName;
         private TextView hotelLocation;
         private TextView hotelRating;
@@ -63,6 +68,7 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.HotelViewHol
 
         public HotelViewHolder(@NonNull View itemView) {
             super(itemView);
+            hotelImage = itemView.findViewById(R.id.hotelImage);
             hotelName = itemView.findViewById(R.id.hotelName);
             hotelLocation = itemView.findViewById(R.id.hotelLocation);
             hotelRating = itemView.findViewById(R.id.hotelRating);
@@ -76,6 +82,25 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.HotelViewHol
             hotelLocation.setText(hotel.getLocation());
             hotelRating.setText("Rating: " + hotel.getRating() + "★");
             hotelPrice.setText("$" + hotel.getPrice() + "/night");
+
+            // Load image from byte array
+            byte[] imageBytes = hotel.getImage();
+            if (imageBytes != null && imageBytes.length > 0) {
+                try {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                    if (bitmap != null) {
+                        hotelImage.setImageBitmap(bitmap);
+                    } else {
+                        hotelImage.setImageResource(R.drawable.default_hotel_image);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    hotelImage.setImageResource(R.drawable.default_hotel_image);
+                }
+            } else {
+                // Set a default image if no image is available
+                hotelImage.setImageResource(R.drawable.default_hotel_image);
+            }
 
             editButton.setOnClickListener(v -> {
                 if (listener != null) {

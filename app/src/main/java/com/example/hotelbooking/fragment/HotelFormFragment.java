@@ -1,6 +1,9 @@
 package com.example.hotelbooking.fragment;
 
 import android.app.DatePickerDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,27 +12,27 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import com.example.hotelbooking.R;
 import com.example.hotelbooking.database.DatabaseHelper;
 import com.example.hotelbooking.model.Hotel;
+import com.example.hotelbooking.model.Room;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-
-import android.net.Uri;
-import android.widget.ImageView;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 
 public class HotelFormFragment extends Fragment {
 
@@ -43,10 +46,10 @@ public class HotelFormFragment extends Fragment {
     private Button saveButton;
     private Button cancelButton;
     private TextView formTitle;
-
     private ImageView hotelImageView;
+
     private ActivityResultLauncher<String> imagePickerLauncher;
-    private Uri selectedImageUri;
+    private byte[] selectedImageBytes;
 
     private DatabaseHelper dbHelper;
     private Calendar checkInCalendar;
@@ -70,6 +73,7 @@ public class HotelFormFragment extends Fragment {
             args.putString("checkInDate", hotel.getCheckInDate());
             args.putBoolean("available", hotel.isAvailable());
             args.putString("roomType", hotel.getRoomType());
+            args.putByteArray("imageBytes", hotel.getImage());
             fragment.setArguments(args);
         }
         return fragment;
@@ -78,22 +82,25 @@ public class HotelFormFragment extends Fragment {
     public void setOnHotelSavedListener(OnHotelSavedListener listener) {
         this.listener = listener;
     }
-    @Override
-public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
 
-    imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
-            uri -> {
-                if (uri != null) {
-                    selectedImageUri = uri;
-                    if (hotelImageView != null) {
-                        hotelImageView.setImageURI(uri);  // show selected image
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        selectedImageBytes = getImageBytesFromUri(uri);
+                        if (hotelImageView != null && selectedImageBytes != null) {
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(
+                                    selectedImageBytes, 0, selectedImageBytes.length);
+                            hotelImageView.setImageBitmap(bitmap);
+                        }
                     }
                 }
-            }
-    );
-}
+        );
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -113,18 +120,18 @@ public void onCreate(Bundle savedInstanceState) {
     }
 
     private void initializeViews(View view) {
-    formTitle = view.findViewById(R.id.formTitle);
-    hotelNameInput = view.findViewById(R.id.hotelNameInput);
-    hotelLocationInput = view.findViewById(R.id.hotelLocationInput);
-    ratingSpinner = view.findViewById(R.id.ratingSpinner);
-    hotelPriceInput = view.findViewById(R.id.hotelPriceInput);
-    checkInDateDisplay = view.findViewById(R.id.checkInDateDisplay);
-    availableCheckbox = view.findViewById(R.id.availableCheckbox);
-    roomTypeRadioGroup = view.findViewById(R.id.roomTypeRadioGroup);
-    saveButton = view.findViewById(R.id.saveButton);
-    cancelButton = view.findViewById(R.id.cancelButton);
-    hotelImageView = view.findViewById(R.id.hotelImageView);   // <-- add this line
-}
+        formTitle = view.findViewById(R.id.formTitle);
+        hotelNameInput = view.findViewById(R.id.hotelNameInput);
+        hotelLocationInput = view.findViewById(R.id.hotelLocationInput);
+        ratingSpinner = view.findViewById(R.id.ratingSpinner);
+        hotelPriceInput = view.findViewById(R.id.hotelPriceInput);
+        checkInDateDisplay = view.findViewById(R.id.checkInDateDisplay);
+        availableCheckbox = view.findViewById(R.id.availableCheckbox);
+        roomTypeRadioGroup = view.findViewById(R.id.roomTypeRadioGroup);
+        saveButton = view.findViewById(R.id.saveButton);
+        cancelButton = view.findViewById(R.id.cancelButton);
+        hotelImageView = view.findViewById(R.id.hotelImageView);
+    }
 
     private void setupRatingSpinner() {
         String[] ratings = {"1 Star", "2 Stars", "3 Stars", "4 Stars", "5 Stars"};
@@ -141,14 +148,14 @@ public void onCreate(Bundle savedInstanceState) {
     private void setupListeners(View view) {
         checkInDateDisplay.setOnClickListener(v -> showDatePicker());
         View calendarButton = view.findViewById(R.id.checkInDateButton);
-        calendarButton.setOnClickListener(v -> showDatePicker());
+        if (calendarButton != null) {
+            calendarButton.setOnClickListener(v -> showDatePicker());
+        }
 
         saveButton.setOnClickListener(v -> saveHotel());
         cancelButton.setOnClickListener(v -> closeFragment());
 
-        // Tap image to choose from gallery
-    hotelImageView.setOnClickListener(v ->
-            imagePickerLauncher.launch("image/*"));
+        hotelImageView.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
     }
 
     private void loadHotelData() {
@@ -172,6 +179,15 @@ public void onCreate(Bundle savedInstanceState) {
                 hotelPriceInput.setText(String.valueOf(editingHotel.getPrice()));
                 checkInDateDisplay.setText(editingHotel.getCheckInDate());
                 availableCheckbox.setChecked(editingHotel.isAvailable());
+
+                // Load the image if it exists
+                byte[] imageBytes = getArguments().getByteArray("imageBytes");
+                if (imageBytes != null && imageBytes.length > 0) {
+                    selectedImageBytes = imageBytes;
+                    editingHotel.setImage(imageBytes);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                    hotelImageView.setImageBitmap(bitmap);
+                }
 
                 String roomType = editingHotel.getRoomType();
                 if ("Single Room".equals(roomType)) {
@@ -219,6 +235,7 @@ public void onCreate(Bundle savedInstanceState) {
         String roomType = selectedRadio.getText().toString();
 
         if (editingHotel != null) {
+            // Update existing hotel
             editingHotel.setName(name);
             editingHotel.setLocation(location);
             editingHotel.setRating(rating);
@@ -227,43 +244,69 @@ public void onCreate(Bundle savedInstanceState) {
             editingHotel.setAvailable(available);
             editingHotel.setRoomType(roomType);
 
-            dbHelper.updateHotel(editingHotel);
-            Toast.makeText(getContext(), "Hotel updated successfully", Toast.LENGTH_SHORT).show();
-        } 
-        else {
-    Hotel hotel = new Hotel(name, location, rating, price, checkInDate, available, roomType);
+            if (selectedImageBytes != null) {
+                editingHotel.setImage(selectedImageBytes);
+            }
 
-    // Insert hotel and get its new ID
-    long hotelId = dbHelper.addHotel(hotel);
+            int rowsAffected = dbHelper.updateHotel(editingHotel);
+            if (rowsAffected > 0) {
+                Toast.makeText(getContext(), "Hotel updated successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Error updating hotel", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            // Create new hotel
+            Hotel hotel = new Hotel(name, location, rating, price, checkInDate, available, roomType);
 
-    // If insert failed, show error and stop
-    if (hotelId == -1) {
-        Toast.makeText(getContext(), "Error: hotel NOT saved to database", Toast.LENGTH_SHORT).show();
-        return;
-    }
+            if (selectedImageBytes != null) {
+                hotel.setImage(selectedImageBytes);
+            }
 
-    // Create a default room for this hotel (you can change values)
-    com.example.hotelbooking.model.Room room =
-            new com.example.hotelbooking.model.Room(
-                    (int) hotelId,   // hotelId FK
-                    "101",          // roomNumber
-                    roomType,       // roomType (same as selected above)
-                    2,              // capacity
-                    true,           // hasBalcony
-                    0.0             // additionalPrice
+            long hotelId = dbHelper.addHotel(hotel);
+
+            if (hotelId == -1) {
+                Toast.makeText(getContext(), "Error: hotel NOT saved to database", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Create a default room for this hotel
+            Room room = new Room(
+                    (int) hotelId,
+                    "101",
+                    roomType,
+                    2,
+                    true,
+                    0.0
             );
 
-    // Save room in rooms table (ignore failure for now)
-    dbHelper.addRoom(room);
-
-    Toast.makeText(getContext(), R.string.save_success, Toast.LENGTH_SHORT).show();
-}
+            dbHelper.addRoom(room);
+            Toast.makeText(getContext(), R.string.save_success, Toast.LENGTH_SHORT).show();
+        }
 
         if (listener != null) {
             listener.onHotelSaved();
         }
 
         closeFragment();
+    }
+
+    private byte[] getImageBytesFromUri(Uri imageUri) {
+        try {
+            InputStream inputStream = getContext().getContentResolver().openInputStream(imageUri);
+            ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+            int bufferSize = 1024;
+            byte[] buffer = new byte[bufferSize];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                byteBuffer.write(buffer, 0, len);
+            }
+            inputStream.close();
+            return byteBuffer.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error loading image", Toast.LENGTH_SHORT).show();
+            return null;
+        }
     }
 
     private void closeFragment() {

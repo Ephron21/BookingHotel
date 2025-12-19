@@ -6,7 +6,6 @@
 
     <color name="booking_blue">#003580</color>
     <color name="booking_light_blue">#0071C2</color>
-    <!-- Decide which yellow you want to use. I'll keep the first one. -->
     <color name="booking_yellow">#FEBB02</color>
     <color name="booking_white">#FFFFFF</color>
     <color name="booking_gray">#E7E7E7</color>
@@ -14,8 +13,8 @@
     <color name="booking_text_light">#666666</color>
 
     <color name="white">#FFFFFF</color>
-    <color name="white1">#FFFFFF</color>
     <color name="black">#000000</color>
+
+    <!-- Make sure there is only ONE definition for gray_light -->
     <color name="gray_light">#F5F5F5</color>
 </resources>
-    

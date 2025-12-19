@@ -9,11 +9,13 @@ public class Hotel {
     private String checkInDate;
     private boolean available;
     private String roomType;
+    private byte[] image; // Changed from String imageUri to byte[] image
 
-    // Constructors
+    // Default Constructor
     public Hotel() {
     }
 
+    // Constructor without id (for new hotels)
     public Hotel(String name, String location, int rating, double price,
                  String checkInDate, boolean available, String roomType) {
         this.name = name;
@@ -25,6 +27,7 @@ public class Hotel {
         this.roomType = roomType;
     }
 
+    // Constructor with id (for existing hotels from database)
     public Hotel(int id, String name, String location, int rating, double price,
                  String checkInDate, boolean available, String roomType) {
         this.id = id;
@@ -102,6 +105,14 @@ public class Hotel {
         this.roomType = roomType;
     }
 
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
     @Override
     public String toString() {
         return "Hotel{" +
@@ -113,6 +124,7 @@ public class Hotel {
                 ", checkInDate='" + checkInDate + '\'' +
                 ", available=" + available +
                 ", roomType='" + roomType + '\'' +
+                ", hasImage=" + (image != null && image.length > 0) +
                 '}';
     }
 }

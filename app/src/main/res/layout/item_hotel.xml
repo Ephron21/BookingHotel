@@ -12,6 +12,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="@dimen/spacing_medium">
+        <!-- Add this ImageView to your existing layout -->
+        <ImageView
+            android:id="@+id/hotelImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/default_hotel_image" />
 
         <TextView
             android:id="@+id/hotelName"

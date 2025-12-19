@@ -38,8 +38,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.glide) // Add this line for Glide
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("androidx.cardview:cardview:1.0.0")
+
+    // Volley for network requests
+    implementation("com.android.volley:volley:1.2.1")
 }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.example.hotelbooking.model.Hotel;
 import com.example.hotelbooking.model.Room;
@@ -14,8 +15,9 @@ import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
+    private static final String TAG = "DatabaseHelper";
     private static final String DATABASE_NAME = "HotelBooking.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Hotel Table
     private static final String TABLE_HOTEL = "hotels";
@@ -67,13 +69,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + ROOM_HAS_BALCONY + " INTEGER,"
                 + ROOM_ADDITIONAL_PRICE + " REAL,"
                 + "FOREIGN KEY(" + ROOM_HOTEL_ID + ") REFERENCES "
-                + TABLE_HOTEL + "(" + HOTEL_ID + ")"
+                + TABLE_HOTEL + "(" + HOTEL_ID + ") ON DELETE CASCADE"
                 + ")";
         db.execSQL(CREATE_ROOM_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.w(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ROOM);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_HOTEL);
         onCreate(db);
@@ -81,151 +84,268 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public long addHotel(Hotel hotel) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(HOTEL_NAME, hotel.getName());
-        values.put(HOTEL_LOCATION, hotel.getLocation());
-        values.put(HOTEL_RATING, hotel.getRating());
-        values.put(HOTEL_PRICE, hotel.getPrice());
-        values.put(HOTEL_CHECK_IN, hotel.getCheckInDate());
-        values.put(HOTEL_AVAILABLE, hotel.isAvailable() ? 1 : 0);
-        values.put(HOTEL_ROOM_TYPE, hotel.getRoomType());
-        long id = db.insert(TABLE_HOTEL, null, values);
-        db.close();
+        long id = -1;
+        try {
+            ContentValues values = new ContentValues();
+            values.put(HOTEL_NAME, hotel.getName());
+            values.put(HOTEL_LOCATION, hotel.getLocation());
+            values.put(HOTEL_RATING, hotel.getRating());
+            values.put(HOTEL_PRICE, hotel.getPrice());
+            values.put(HOTEL_CHECK_IN, hotel.getCheckInDate());
+            values.put(HOTEL_AVAILABLE, hotel.isAvailable() ? 1 : 0);
+            values.put(HOTEL_ROOM_TYPE, hotel.getRoomType());
+            values.put(HOTEL_IMAGE, hotel.getImage());
+
+            id = db.insert(TABLE_HOTEL, null, values);
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to add hotel to database", e);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
         return id;
     }
 
     public Hotel getHotel(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_HOTEL,
-                new String[]{HOTEL_ID, HOTEL_NAME, HOTEL_LOCATION, HOTEL_RATING,
-                        HOTEL_PRICE, HOTEL_CHECK_IN, HOTEL_AVAILABLE, HOTEL_ROOM_TYPE},
-                HOTEL_ID + "=?",
-                new String[]{String.valueOf(id)},
-                null, null, null, null);
-
+        Cursor cursor = null;
         Hotel hotel = null;
-        if (cursor != null && cursor.moveToFirst()) {
-            hotel = new Hotel(
-                    cursor.getInt(0),
-                    cursor.getString(1),
-                    cursor.getString(2),
-                    cursor.getInt(3),
-                    cursor.getDouble(4),
-                    cursor.getString(5),
-                    cursor.getInt(6) == 1,
-                    cursor.getString(7)
-            );
-            cursor.close();
+        try {
+            cursor = db.query(TABLE_HOTEL, null, HOTEL_ID + "=?",
+                    new String[]{String.valueOf(id)}, null, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                hotel = new Hotel(
+                        cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_NAME)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_LOCATION)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_RATING)),
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(HOTEL_PRICE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_CHECK_IN)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_AVAILABLE)) == 1,
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_ROOM_TYPE))
+                );
+                hotel.setImage(cursor.getBlob(cursor.getColumnIndexOrThrow(HOTEL_IMAGE)));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to get hotel from database", e);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
-        db.close();
         return hotel;
+    }
+
+    public Hotel getLastAddedHotel() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        Hotel hotel = null;
+        try {
+            String query = "SELECT * FROM " + TABLE_HOTEL + " ORDER BY " + HOTEL_ID + " DESC LIMIT 1";
+            cursor = db.rawQuery(query, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                hotel = new Hotel(
+                        cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_NAME)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_LOCATION)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_RATING)),
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(HOTEL_PRICE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_CHECK_IN)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_AVAILABLE)) == 1,
+                        cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_ROOM_TYPE))
+                );
+                hotel.setImage(cursor.getBlob(cursor.getColumnIndexOrThrow(HOTEL_IMAGE)));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to get last added hotel", e);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
+        return hotel;
+    }
+
+    public void deleteAllHotels() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            db.delete(TABLE_HOTEL, null, null);
+            // Also clear rooms since they are dependent (though CASCADE might not work if logic is manual, but DB constraint handles it)
+            // But let's be safe if we are wiping to sync.
+            db.delete(TABLE_ROOM, null, null); 
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to delete all hotels", e);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
     }
 
     public List<Hotel> getAllHotels() {
         List<Hotel> hotelList = new ArrayList<>();
-        String selectQuery = "SELECT * FROM " + TABLE_HOTEL;
-
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        Cursor cursor = null;
+        try {
+            String selectQuery = "SELECT * FROM " + TABLE_HOTEL;
+            cursor = db.rawQuery(selectQuery, null);
 
-        if (cursor.moveToFirst()) {
-            do {
-                Hotel hotel = new Hotel(
-                        cursor.getInt(0),
-                        cursor.getString(1),
-                        cursor.getString(2),
-                        cursor.getInt(3),
-                        cursor.getDouble(4),
-                        cursor.getString(5),
-                        cursor.getInt(6) == 1,
-                        cursor.getString(7)
-                );
-                hotelList.add(hotel);
-            } while (cursor.moveToNext());
+            if (cursor.moveToFirst()) {
+                do {
+                    Hotel hotel = new Hotel(
+                            cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_ID)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_NAME)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_LOCATION)),
+                            cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_RATING)),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow(HOTEL_PRICE)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_CHECK_IN)),
+                            cursor.getInt(cursor.getColumnIndexOrThrow(HOTEL_AVAILABLE)) == 1,
+                            cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_ROOM_TYPE))
+                    );
+                    hotel.setImage(cursor.getBlob(cursor.getColumnIndexOrThrow(HOTEL_IMAGE)));
+                    hotelList.add(hotel);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to get all hotels from database", e);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
-        cursor.close();
-        db.close();
         return hotelList;
     }
 
     public int updateHotel(Hotel hotel) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(HOTEL_NAME, hotel.getName());
-        values.put(HOTEL_LOCATION, hotel.getLocation());
-        values.put(HOTEL_RATING, hotel.getRating());
-        values.put(HOTEL_PRICE, hotel.getPrice());
-        values.put(HOTEL_CHECK_IN, hotel.getCheckInDate());
-        values.put(HOTEL_AVAILABLE, hotel.isAvailable() ? 1 : 0);
-        values.put(HOTEL_ROOM_TYPE, hotel.getRoomType());
+        int rowsAffected = 0;
+        try {
+            ContentValues values = new ContentValues();
+            values.put(HOTEL_NAME, hotel.getName());
+            values.put(HOTEL_LOCATION, hotel.getLocation());
+            values.put(HOTEL_RATING, hotel.getRating());
+            values.put(HOTEL_PRICE, hotel.getPrice());
+            values.put(HOTEL_CHECK_IN, hotel.getCheckInDate());
+            values.put(HOTEL_AVAILABLE, hotel.isAvailable() ? 1 : 0);
+            values.put(HOTEL_ROOM_TYPE, hotel.getRoomType());
+            values.put(HOTEL_IMAGE, hotel.getImage());
 
-        int rowsAffected = db.update(TABLE_HOTEL, values,
-                HOTEL_ID + "=?",
-                new String[]{String.valueOf(hotel.getId())});
-        db.close();
+            rowsAffected = db.update(TABLE_HOTEL, values,
+                    HOTEL_ID + "=?",
+                    new String[]{String.valueOf(hotel.getId())});
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to update hotel", e);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
         return rowsAffected;
     }
 
     public void deleteHotel(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_ROOM, ROOM_HOTEL_ID + "=?",
-                new String[]{String.valueOf(id)});
-        db.delete(TABLE_HOTEL, HOTEL_ID + "=?",
-                new String[]{String.valueOf(id)});
-        db.close();
+        try {
+            db.delete(TABLE_HOTEL, HOTEL_ID + "=?", new String[]{String.valueOf(id)});
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to delete hotel", e);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
     }
 
     public long addRoom(Room room) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(ROOM_HOTEL_ID, room.getHotelId());
-        values.put(ROOM_NUMBER, room.getRoomNumber());
-        values.put(ROOM_TYPE, room.getRoomType());
-        values.put(ROOM_CAPACITY, room.getCapacity());
-        values.put(ROOM_HAS_BALCONY, room.isHasBalcony() ? 1 : 0);
-        values.put(ROOM_ADDITIONAL_PRICE, room.getAdditionalPrice());
+        long id = -1;
+        try {
+            ContentValues values = new ContentValues();
+            values.put(ROOM_HOTEL_ID, room.getHotelId());
+            values.put(ROOM_NUMBER, room.getRoomNumber());
+            values.put(ROOM_TYPE, room.getRoomType());
+            values.put(ROOM_CAPACITY, room.getCapacity());
+            values.put(ROOM_HAS_BALCONY, room.isHasBalcony() ? 1 : 0);
+            values.put(ROOM_ADDITIONAL_PRICE, room.getAdditionalPrice());
 
-        long id = db.insert(TABLE_ROOM, null, values);
-        db.close();
+            id = db.insert(TABLE_ROOM, null, values);
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to add room", e);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
         return id;
     }
 
     public List<Room> getRoomsByHotelId(int hotelId) {
         List<Room> roomList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ROOM,
-                new String[]{ROOM_ID, ROOM_HOTEL_ID, ROOM_NUMBER, ROOM_TYPE,
-                        ROOM_CAPACITY, ROOM_HAS_BALCONY, ROOM_ADDITIONAL_PRICE},
-                ROOM_HOTEL_ID + "=?",
-                new String[]{String.valueOf(hotelId)},
-                null, null, null);
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_ROOM, null, ROOM_HOTEL_ID + "=?",
+                    new String[]{String.valueOf(hotelId)}, null, null, null);
 
-        if (cursor.moveToFirst()) {
-            do {
-                Room room = new Room(
-                        cursor.getInt(0),
-                        cursor.getInt(1),
-                        cursor.getString(2),
-                        cursor.getString(3),
-                        cursor.getInt(4),
-                        cursor.getInt(5) == 1,
-                        cursor.getDouble(6)
-                );
-                roomList.add(room);
-            } while (cursor.moveToNext());
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    Room room = new Room(
+                            cursor.getInt(cursor.getColumnIndexOrThrow(ROOM_ID)),
+                            cursor.getInt(cursor.getColumnIndexOrThrow(ROOM_HOTEL_ID)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(ROOM_NUMBER)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(ROOM_TYPE)),
+                            cursor.getInt(cursor.getColumnIndexOrThrow(ROOM_CAPACITY)),
+                            cursor.getInt(cursor.getColumnIndexOrThrow(ROOM_HAS_BALCONY)) == 1,
+                            cursor.getDouble(cursor.getColumnIndexOrThrow(ROOM_ADDITIONAL_PRICE))
+                    );
+                    roomList.add(room);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error while trying to get rooms by hotel id", e);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
-        cursor.close();
-        db.close();
         return roomList;
     }
 
     public int getHotelCount() {
-        String countQuery = "SELECT * FROM " + TABLE_HOTEL;
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(countQuery, null);
-        int count = cursor.getCount();
-        cursor.close();
-        db.close();
+        Cursor cursor = null;
+        int count = 0;
+        try {
+            String countQuery = "SELECT COUNT(*) FROM " + TABLE_HOTEL;
+            cursor = db.rawQuery(countQuery, null);
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error while getting hotel count", e);
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
         return count;
     }
 }

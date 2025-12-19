@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This creates a layer-list drawable, which can stack multiple items. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Item 1: A solid light grey background color -->
+    <item>
+        <shape android:shape="rectangle">
+            <!-- You can use a color from your colors.xml or a hex code -->
+            <solid android:color="@color/gray_light" />
+        </shape>
+    </item>
+
+    <!-- Item 2: A small "image" icon centered on top of the background -->
+    <item
+        android:width="48dp"
+        android:height="48dp"
+        android:gravity="center">
+        <!--
+            This uses a built-in Android icon for an image.
+            You can also use your own custom icon here if you prefer.
+        -->
+        <bitmap
+            android:src="@android:drawable/ic_menu_gallery"
+            android:tint="#CCCCCC" /> <!-- A slightly darker grey for the icon tint -->
+    </item>
+
+</layer-list>
