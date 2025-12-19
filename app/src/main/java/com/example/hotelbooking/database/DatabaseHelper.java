@@ -82,11 +82,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    /**
+     * Adds a hotel to the database.
+     * IMPORTANT: If the hotel object has an ID > 0 (e.g., from server sync),
+     * we force that ID into the database to keep IDs consistent.
+     */
     public long addHotel(Hotel hotel) {
         SQLiteDatabase db = this.getWritableDatabase();
         long id = -1;
         try {
             ContentValues values = new ContentValues();
+            // --- FIX FOR SYNC ISSUE ---
+            // If the hotel comes from the server, it will have a valid ID.
+            // We must use this ID to ensure UPDATE/DELETE operations work correctly against the server.
+            if (hotel.getId() > 0) {
+                values.put(HOTEL_ID, hotel.getId());
+            }
+            // --------------------------
+
             values.put(HOTEL_NAME, hotel.getName());
             values.put(HOTEL_LOCATION, hotel.getLocation());
             values.put(HOTEL_RATING, hotel.getRating());
