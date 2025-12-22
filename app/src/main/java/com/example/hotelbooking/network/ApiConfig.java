@@ -10,8 +10,11 @@ public class ApiConfig {
     // If you are using the Android Emulator, 'localhost' refers to the emulator itself.
     // To access your computer's localhost, usually you need "http://10.0.2.2:5000/api".
     // However, if you have set up port forwarding (adb reverse), "http://localhost:5000/api" will work.
-    // User requested IP:
-    public static final String BASE_URL = "http://172.31.239.130:5000/api";
+    
+    // User requested IP: http://172.31.239.130:5000
+    // We separate the server root from the API path to handle image URLs correctly.
+    public static final String SERVER_URL = "http://172.31.239.130:5000";
+    public static final String BASE_URL = SERVER_URL + "/api";
 
     // --- Hotel API Endpoints ---
     // URL for getting all hotels (GET) and creating a new one (POST)

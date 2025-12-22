@@ -1,6 +1,7 @@
 package com.example.hotelbooking;
 
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -122,6 +123,35 @@ public class Activity3 extends AppCompatActivity implements HotelAdapter.OnHotel
                                     hotelJson.getBoolean("available"),
                                     hotelJson.optString("roomType", "Standard")
                             );
+                            
+                            // --- Image Parsing Logic ---
+                            String imageString = hotelJson.optString("image");
+                            if (imageString != null && !imageString.isEmpty()) {
+                                if (imageString.startsWith("http")) {
+                                    // It's a full URL
+                                    hotel.setImageUrl(imageString);
+                                } else if (imageString.startsWith("/")) {
+                                    // It's a relative URL (e.g., /static/img.jpg)
+                                    // Prepend the Server URL (http://172.31.239.130:5000)
+                                    hotel.setImageUrl(ApiConfig.SERVER_URL + imageString);
+                                } else {
+                                    // Assume it's Base64
+                                    try {
+                                        String base64Data = imageString;
+                                        // Handle data URI scheme if present (e.g. "data:image/jpeg;base64,...")
+                                        if (base64Data.contains(",")) {
+                                            base64Data = base64Data.substring(base64Data.indexOf(",") + 1);
+                                        }
+                                        
+                                        byte[] decodedString = Base64.decode(base64Data, Base64.DEFAULT);
+                                        hotel.setImage(decodedString);
+                                    } catch (IllegalArgumentException e) {
+                                        // Not a valid Base64 string
+                                        Log.e("Activity3", "Invalid Base64 string for image: " + imageString);
+                                    }
+                                }
+                            }
+                            
                             networkHotels.add(hotel);
                         }
 
@@ -238,6 +268,12 @@ public class Activity3 extends AppCompatActivity implements HotelAdapter.OnHotel
             jsonBody.put("checkInDate", hotel.getCheckInDate());
             jsonBody.put("available", hotel.isAvailable());
             jsonBody.put("roomType", hotel.getRoomType());
+            
+            // Send Base64 image if available locally
+            if (hotel.getImage() != null && hotel.getImage().length > 0) {
+                 String encodedImage = Base64.encodeToString(hotel.getImage(), Base64.DEFAULT);
+                 jsonBody.put("image", encodedImage);
+            }
 
             JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, ApiConfig.HOTELS_ENDPOINT, jsonBody,
                     response -> {
@@ -263,6 +299,12 @@ public class Activity3 extends AppCompatActivity implements HotelAdapter.OnHotel
             jsonBody.put("checkInDate", hotel.getCheckInDate());
             jsonBody.put("available", hotel.isAvailable());
             jsonBody.put("roomType", hotel.getRoomType());
+            
+            // Send Base64 image if available locally (and user updated it)
+            if (hotel.getImage() != null && hotel.getImage().length > 0) {
+                 String encodedImage = Base64.encodeToString(hotel.getImage(), Base64.DEFAULT);
+                 jsonBody.put("image", encodedImage);
+            }
 
             String url = ApiConfig.getHotelUrl(hotel.getId());
 

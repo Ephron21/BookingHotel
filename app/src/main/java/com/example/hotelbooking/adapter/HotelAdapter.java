@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.hotelbooking.R;
 import com.example.hotelbooking.model.Hotel;
 
@@ -83,24 +84,58 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.HotelViewHol
             hotelRating.setText("Rating: " + hotel.getRating() + "★");
             hotelPrice.setText("$" + hotel.getPrice() + "/night");
 
-            // Load image from byte array
-            byte[] imageBytes = hotel.getImage();
-            if (imageBytes != null && imageBytes.length > 0) {
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                    if (bitmap != null) {
-                        hotelImage.setImageBitmap(bitmap);
-                    } else {
-                        hotelImage.setImageResource(R.drawable.default_hotel_image);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    hotelImage.setImageResource(R.drawable.default_hotel_image);
-                }
-            } else {
-                // Set a default image if no image is available
-                hotelImage.setImageResource(R.drawable.default_hotel_image);
+            // Logic to load image: URL first, then byte array, then default
+            boolean imageLoaded = false;
+
+            // 1. Try URL
+            if (hotel.getImageUrl() != null && !hotel.getImageUrl().isEmpty()) {
+                Glide.with(itemView.getContext())
+                        .load(hotel.getImageUrl())
+                        .placeholder(R.drawable.default_hotel_image)
+                        .error(R.drawable.default_hotel_image)
+                        .into(hotelImage);
+                imageLoaded = true;
             }
+
+            // 2. Try Byte Array (if URL failed or empty)
+            if (!imageLoaded) {
+                byte[] imageBytes = hotel.getImage();
+                if (imageBytes != null && imageBytes.length > 0) {
+                    try {
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                        if (bitmap != null) {
+                            hotelImage.setImageBitmap(bitmap);
+                            imageLoaded = true;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            // 3. Default fallback
+            if (!imageLoaded) {
+                // If Glide is loading, it handles placeholder.
+                // But if we didn't trigger Glide and didn't have bytes:
+                // However, Glide call above is async. If we call setImageBitmap after Glide starts, it might conflict.
+                // Simplified logic:
+                
+                if (hotel.getImageUrl() == null || hotel.getImageUrl().isEmpty()) {
+                     // No URL, so we rely on bytes or default
+                     if (hotel.getImage() != null && hotel.getImage().length > 0) {
+                          try {
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(hotel.getImage(), 0, hotel.getImage().length);
+                                hotelImage.setImageBitmap(bitmap);
+                          } catch (Exception e) {
+                                hotelImage.setImageResource(R.drawable.default_hotel_image);
+                          }
+                     } else {
+                          hotelImage.setImageResource(R.drawable.default_hotel_image);
+                     }
+                }
+                // If URL exists, Glide handles it (including error placeholder)
+            }
+
 
             editButton.setOnClickListener(v -> {
                 if (listener != null) {

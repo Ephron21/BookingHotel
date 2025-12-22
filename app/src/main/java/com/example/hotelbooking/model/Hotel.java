@@ -10,6 +10,7 @@ public class Hotel {
     private boolean available;
     private String roomType;
     private byte[] image; // Changed from String imageUri to byte[] image
+    private String imageUrl; // New field for server URL
 
     // Default Constructor
     public Hotel() {
@@ -113,6 +114,14 @@ public class Hotel {
         this.image = image;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     @Override
     public String toString() {
         return "Hotel{" +
@@ -125,6 +134,7 @@ public class Hotel {
                 ", available=" + available +
                 ", roomType='" + roomType + '\'' +
                 ", hasImage=" + (image != null && image.length > 0) +
+                ", imageUrl='" + imageUrl + '\'' +
                 '}';
     }
 }

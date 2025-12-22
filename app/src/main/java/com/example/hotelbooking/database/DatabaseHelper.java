@@ -17,7 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DatabaseHelper";
     private static final String DATABASE_NAME = "HotelBooking.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4; // Incremented version for new column
 
     // Hotel Table
     private static final String TABLE_HOTEL = "hotels";
@@ -30,6 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String HOTEL_AVAILABLE = "available";
     private static final String HOTEL_ROOM_TYPE = "room_type";
     private static final String HOTEL_IMAGE = "image";
+    private static final String HOTEL_IMAGE_URL = "image_url"; // New Column
 
     // Room Table
     private static final String TABLE_ROOM = "rooms";
@@ -56,7 +57,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + HOTEL_CHECK_IN + " TEXT,"
                 + HOTEL_AVAILABLE + " INTEGER,"
                 + HOTEL_ROOM_TYPE + " TEXT,"
-                + HOTEL_IMAGE + " BLOB"
+                + HOTEL_IMAGE + " BLOB,"
+                + HOTEL_IMAGE_URL + " TEXT" // Add new column
                 + ")";
         db.execSQL(CREATE_HOTEL_TABLE);
 
@@ -82,24 +84,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /**
-     * Adds a hotel to the database.
-     * IMPORTANT: If the hotel object has an ID > 0 (e.g., from server sync),
-     * we force that ID into the database to keep IDs consistent.
-     */
     public long addHotel(Hotel hotel) {
         SQLiteDatabase db = this.getWritableDatabase();
         long id = -1;
         try {
             ContentValues values = new ContentValues();
-            // --- FIX FOR SYNC ISSUE ---
-            // If the hotel comes from the server, it will have a valid ID.
-            // We must use this ID to ensure UPDATE/DELETE operations work correctly against the server.
             if (hotel.getId() > 0) {
                 values.put(HOTEL_ID, hotel.getId());
             }
-            // --------------------------
-
             values.put(HOTEL_NAME, hotel.getName());
             values.put(HOTEL_LOCATION, hotel.getLocation());
             values.put(HOTEL_RATING, hotel.getRating());
@@ -108,6 +100,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(HOTEL_AVAILABLE, hotel.isAvailable() ? 1 : 0);
             values.put(HOTEL_ROOM_TYPE, hotel.getRoomType());
             values.put(HOTEL_IMAGE, hotel.getImage());
+            values.put(HOTEL_IMAGE_URL, hotel.getImageUrl()); // Save URL
 
             id = db.insert(TABLE_HOTEL, null, values);
         } catch (Exception e) {
@@ -140,6 +133,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_ROOM_TYPE))
                 );
                 hotel.setImage(cursor.getBlob(cursor.getColumnIndexOrThrow(HOTEL_IMAGE)));
+                // Retrieve URL safely
+                int urlIndex = cursor.getColumnIndex(HOTEL_IMAGE_URL);
+                if (urlIndex != -1) {
+                    hotel.setImageUrl(cursor.getString(urlIndex));
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Error while trying to get hotel from database", e);
@@ -174,6 +172,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_ROOM_TYPE))
                 );
                 hotel.setImage(cursor.getBlob(cursor.getColumnIndexOrThrow(HOTEL_IMAGE)));
+                int urlIndex = cursor.getColumnIndex(HOTEL_IMAGE_URL);
+                if (urlIndex != -1) {
+                    hotel.setImageUrl(cursor.getString(urlIndex));
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Error while trying to get last added hotel", e);
@@ -192,8 +194,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             db.delete(TABLE_HOTEL, null, null);
-            // Also clear rooms since they are dependent (though CASCADE might not work if logic is manual, but DB constraint handles it)
-            // But let's be safe if we are wiping to sync.
             db.delete(TABLE_ROOM, null, null); 
         } catch (Exception e) {
             Log.e(TAG, "Error while trying to delete all hotels", e);
@@ -225,6 +225,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             cursor.getString(cursor.getColumnIndexOrThrow(HOTEL_ROOM_TYPE))
                     );
                     hotel.setImage(cursor.getBlob(cursor.getColumnIndexOrThrow(HOTEL_IMAGE)));
+                    int urlIndex = cursor.getColumnIndex(HOTEL_IMAGE_URL);
+                    if (urlIndex != -1) {
+                        hotel.setImageUrl(cursor.getString(urlIndex));
+                    }
                     hotelList.add(hotel);
                 } while (cursor.moveToNext());
             }
@@ -254,6 +258,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(HOTEL_AVAILABLE, hotel.isAvailable() ? 1 : 0);
             values.put(HOTEL_ROOM_TYPE, hotel.getRoomType());
             values.put(HOTEL_IMAGE, hotel.getImage());
+            values.put(HOTEL_IMAGE_URL, hotel.getImageUrl()); // Update URL
 
             rowsAffected = db.update(TABLE_HOTEL, values,
                     HOTEL_ID + "=?",
