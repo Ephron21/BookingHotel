@@ -246,6 +246,8 @@ public class HotelFormFragment extends Fragment {
 
             if (selectedImageBytes != null) {
                 editingHotel.setImage(selectedImageBytes);
+                // Clear the URL because we have a new local image
+                editingHotel.setImageUrl(null);
             }
 
             int rowsAffected = dbHelper.updateHotel(editingHotel);
